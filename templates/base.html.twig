@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Login app{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --bs-body-font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            --theme-bg-body: #f8f9fa;
+            --theme-bg-card: #ffffff;
+            --theme-bg-navbar: #ffffff;
+            --theme-text-primary: #212529;
+            --theme-text-secondary: #6c757d;
+            --theme-border-color: #dee2e6;
+            --theme-table-hover: #f8f9fa;
+            --theme-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --theme-card-shadow-hover: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+        
+        [data-theme="dark"] {
+            --theme-bg-body: #1a1a1a;
+            --theme-bg-card: #2d2d2d;
+            --theme-bg-navbar: #212529;
+            --theme-text-primary: #f8f9fa;
+            --theme-text-secondary: #adb5bd;
+            --theme-border-color: #495057;
+            --theme-table-hover: #2d2d2d;
+            --theme-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+            --theme-card-shadow-hover: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+        }
+
+        body { 
+            background-color: var(--theme-bg-body);
+            color: var(--theme-text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar-brand { 
+            font-weight: 600; 
+            color: var(--theme-text-primary) !important;
+        }
+        
+        .navbar .nav-link {
+            color: var(--theme-text-primary) !important;
+        }
+        
+        .navbar-light {
+            background-color: var(--theme-bg-navbar) !important;
+            border-color: var(--theme-border-color) !important;
+        }
+        
+        .navbar-dark {
+            background-color: var(--theme-bg-navbar) !important;
+            border-color: var(--theme-border-color) !important;
+        }
+        
+        [data-theme="dark"] .navbar-brand {
+            color: #ffffff !important;
+        }
+        
+        [data-theme="dark"] .navbar .nav-link {
+            color: #f8f9fa !important;
+        }
+        
+        .text-muted {
+            color: var(--theme-text-secondary) !important;
+        }
+
+        .card { 
+            border: none; 
+            box-shadow: var(--theme-card-shadow);
+            background-color: var(--theme-bg-card);
+            transition: box-shadow 0.3s, background-color 0.3s;
+        }
+        .card:hover { box-shadow: var(--theme-card-shadow-hover); }
+        
+        .card-header {
+            background-color: var(--theme-bg-card);
+            border-color: var(--theme-border-color);
+        }
+        
+        .table {
+            --bs-table-hover-bg: var(--theme-table-hover);
+            --bs-table-bg: transparent;
+            color: var(--theme-text-primary);
+            background-color: var(--theme-bg-card);
+        }
+        
+        .table thead th, .table tbody td {
+            border-color: var(--theme-border-color);
+            color: var(--theme-text-primary);
+            background-color: var(--theme-bg-card);
+        }
+        
+        .table > thead {
+            background-color: var(--theme-bg-card);
+            color: var(--theme-text-primary);
+        }
+        
+        [data-theme="dark"] .table > thead th {
+            background-color: #343a40;
+            color: #f8f9fa;
+        }
+        
+        [data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+            --bs-table-bg-type: #2d2d2d;
+        }
+        
+        [data-theme="dark"] .table tbody tr:hover {
+            background-color: #3d3d3d;
+        }
+        
+        .form-control, .form-select {
+            background-color: var(--theme-bg-card);
+            border-color: var(--theme-border-color);
+            color: var(--theme-text-primary);
+        }
+        
+        .form-control:focus, .form-select:focus { 
+            border-color: #86b7fe; 
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); 
+        }
+        
+        [data-theme="dark"] .form-control::placeholder {
+            color: var(--theme-text-secondary);
+        }
+        
+        [data-theme="dark"] .form-label {
+            color: var(--theme-text-primary);
+        }
+        
+        [data-theme="dark"] .table td,
+        [data-theme="dark"] .table th {
+            color: var(--theme-text-primary);
+        }
+        
+        [data-theme="dark"] .badge {
+            color: #fff;
+        }
+        
+        [data-theme="dark"] select option {
+            background-color: var(--theme-bg-card);
+            color: var(--theme-text-primary);
+        }
+        
+        [data-theme="dark"] .form-check-label {
+            color: var(--theme-text-primary);
+        }
+        
+        [data-theme="dark"] .text-dark-mode {
+            color: #fff !important;
+        }
+        
+        [data-theme="dark"] .text-dark-mode-input {
+            color: #fff !important;
+            background-color: #3d3d3d !important;
+            border-color: #555 !important;
+        }
+        
+        [data-theme="dark"] .input-group-text.text-dark-mode {
+            color: #fff !important;
+            background-color: #3d3d3d !important;
+            border-color: #555 !important;
+        }
+        
+        .btn { transition: all 0.15s ease-in-out; }
+        
+        a { text-decoration: none; color: var(--theme-text-primary); }
+        a:hover { text-decoration: underline; }
+        
+        .dropdown-menu {
+            background-color: var(--theme-bg-card);
+            border-color: var(--theme-border-color);
+        }
+        
+        .dropdown-item {
+            color: var(--theme-text-primary);
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--theme-table-hover);
+        }
+        
+        [data-theme="dark"] .btn-outline-secondary {
+            color: var(--theme-text-secondary);
+            border-color: var(--theme-border-color);
+        }
+        
+        [data-theme="dark"] .btn-outline-danger {
+            border-color: var(--theme-border-color);
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 9999;
+        }
+        
+        .toast {
+            background-color: var(--theme-bg-card);
+            color: var(--theme-text-primary);
+        }
+        
+        .theme-card {
+            background-color: var(--theme-bg-card);
+            color: var(--theme-text-primary);
+        }
+    </style>
+    {% block stylesheets %}{% endblock %}
+</head>
+<body>
+{% if app.user %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm mb-4 sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{{ path('app_servers') }}">
+            <i class="bi bi-server me-2"></i>Panel de Control
+        </a>
+        <div class="navbar-nav me-auto">
+            <a class="nav-link" href="{{ path('app_servers') }}">
+                <i class="bi bi-hdd me-1"></i>Servidores
+            </a>
+            <a class="nav-link" href="{{ path('app_admin_statistics') }}">
+                <i class="bi bi-bar-chart me-1"></i>Estadísticas
+            </a>
+            {% if is_granted('ROLE_ADMIN') %}
+            <a class="nav-link" href="{{ path('app_services_admin') }}">
+                <i class="bi bi-gear me-1"></i>Servicios
+            </a>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-gear-wide-connected me-1"></i>Gestión
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ path('app_admin_tags') }}"><i class="bi bi-tags me-2"></i>Tags</a></li>
+                    <li><a class="dropdown-item" href="{{ path('app_admin_os') }}"><i class="bi bi-windows me-2"></i>Sistemas Operativos</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ path('app_users') }}"><i class="bi bi-people me-2"></i>Usuarios</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{{ path('app_about') }}"><i class="bi bi-info-circle me-2"></i>Acerca de</a></li>
+                </ul>
+            </li>
+            {% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-outline-secondary btn-sm" id="theme-toggle" title="Cambiar tema">
+                <i class="bi bi-sun-fill" id="theme-icon"></i>
+            </button>
+            <a href="{{ path('app_profile_edit') }}" class="text-decoration-none me-2" title="Mi Perfil">
+                {% if app.user.avatarFilename %}
+                    <img src="{{ asset('/uploads/avatars/' ~ app.user.avatarFilename) }}" alt="{{ app.user.userIdentifier }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-secondary bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        <i class="bi bi-person-fill text-secondary"></i>
+                    </div>
+                {% endif %}
+            </a>
+            <span class="text-end">
+                <div class="small text-muted">{{ app.user.userIdentifier }}</div>
+            </span>
+            <a href="{{ path('app_logout') }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-box-arrow-right me-1"></i>Salir
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="container">
+{% endif %}
+
+{# Toast Container #}
+<div class="toast-container">
+    {% for flash in app.flashes('success') %}
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="toast-header bg-success text-white">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong class="me-auto">Éxito</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">{{ flash }}</div>
+    </div>
+    {% endfor %}
+    
+    {% for flash in app.flashes('error') %}
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+        <div class="toast-header bg-danger text-white">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong class="me-auto">Error</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">{{ flash }}</div>
+    </div>
+    {% endfor %}
+    
+    {% for flash in app.flashes('warning') %}
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="toast-header bg-warning text-dark">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong class="me-auto">Advertencia</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">{{ flash }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+{% block body %}{% endblock %}
+
+{% if app.user %}
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Restore theme from localStorage
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+    
+    // Toast handling
+    var toastEl = document.querySelector('.toast.show');
+    if (toastEl) {
+        var toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+    
+    // Theme toggle button
+    document.getElementById('theme-toggle').addEventListener('click', function() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+        
+        // Update data-bs-theme on all collapse elements for server details
+        document.querySelectorAll('.collapse-details').forEach(function(el) {
+            el.setAttribute('data-bs-theme', newTheme);
+        });
+    });
+    
+    function updateThemeIcon(theme) {
+        const icon = document.getElementById('theme-icon');
+        if (theme === 'dark') {
+            icon.classList.remove('bi-sun-fill');
+            icon.classList.add('bi-moon-fill');
+        } else {
+            icon.classList.remove('bi-moon-fill');
+            icon.classList.add('bi-sun-fill');
+        }
+    }
+});
+</script>
+<footer class="border-top mt-4 py-3 text-center">
+    <div class="container">
+        <p class="mb-1"><strong>Syntronet</strong> | <a href="mailto:ventas@syntronet.cl">ventas@syntronet.cl</a></p>
+        <p class="mb-0 text-muted small">&copy; 2026 Todos los derechos reservados.</p>
+    </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+.git
+.gitignore
+node_modules
+var
+public/build
+.env.local
+.env.*.local
+*.log
+docker-compose.override.yml
+.DS_Store
+Thumbs.db
+.phpunit.result.cache

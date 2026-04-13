@@ -1,0 +1,198 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Servidor{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Editar: {{ server.name }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ server.name }}" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Estado</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="active" {% if server.status == 'active' %}selected{% endif %}>Activo</option>
+                            <option value="inactive" {% if server.status == 'inactive' %}selected{% endif %}>Inactivo</option>
+                            <option value="maintenance" {% if server.status == 'maintenance' %}selected{% endif %}>Mantenimiento</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="os" class="form-label">Sistema Operativo *</label>
+                        <select class="form-select" id="server_os" name="os" required>
+                            <option value="">Seleccionar...</option>
+                            {% for os in operatingSystems %}
+                                {% set serverOsName = server.operatingSystemVersion.operatingSystem.name|default(server.os) %}
+                                <option value="{{ os.id }}" {% if serverOsName == os.name %}selected{% endif %}>{{ os.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="osVersion" class="form-label">Versión SO *</label>
+                        <select class="form-select" id="server_os_version" name="osVersion">
+                            <option value="">Seleccionar...</option>
+                            {% for version in osVersions %}
+                                {% set serverOsVersion = server.operatingSystemVersion.version|default(server.osVersion) %}
+                                <option value="{{ version.version }}" {% if serverOsVersion == version.version %}selected{% endif %}>{{ version.version }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="managementIp" class="form-label">IP/Subdominio de Gestión *</label>
+                        <input type="text" class="form-control" id="managementIp" name="managementIp" value="{{ server.managementIp }}" required>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="sshUser" class="form-label">Usuario SSH *</label>
+                        <input type="text" class="form-control" id="sshUser" name="sshUser" value="{{ server.sshUser }}" required>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="sshPassword" class="form-label">Password SSH</label>
+                        <input type="password" class="form-control" id="sshPassword" name="sshPassword" value="{{ server.sshPassword }}">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="cpu" class="form-label">CPU</label>
+                        <input type="text" class="form-control" id="cpu" name="cpu" value="{{ server.cpu }}">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="ram" class="form-label">RAM</label>
+                        <input type="text" class="form-control" id="ram" name="ram" value="{{ server.ram }}">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="hd" class="form-label">Disco Duro</label>
+                        <input type="text" class="form-control" id="hd" name="hd" value="{{ server.hd }}">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="provider" class="form-label">Provider</label>
+                        <input type="text" class="form-control" id="provider" name="provider" value="{{ server.provider }}">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="site" class="form-label">Sitio/Ubicicación</label>
+                        <input type="text" class="form-control" id="site" name="site" value="{{ server.site }}">
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="description" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ server.description }}</textarea>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label class="form-label">Servicios</label>
+                        <div class="row g-2">
+                            {% for service in services %}
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="service_{{ service.id }}" name="services[]" value="{{ service.id }}" {% if server.services.contains(service) %}checked{% endif %}>
+                                        <label class="form-check-label" for="service_{{ service.id }}">{{ service.name }}</label>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="col-12">
+                                    <span class="text-muted">No hay servicios disponibles</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="tags" class="form-label">Tags</label>
+                        <select class="form-select" id="tags" name="tags[]" multiple size="4">
+                            {% for tag in tags %}
+                                <option value="{{ tag.id }}" {% if server.tags.contains(tag) %}selected{% endif %}>{{ tag.name }}</option>
+                            {% endfor %}
+                            {% if tags|length == 0 %}
+                                <option disabled>No hay tags disponibles</option>
+                            {% endif %}
+                        </select>
+                        <small class="text-muted">Mantén presionado Ctrl para seleccionar múltiples</small>
+                    </div>
+                    
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Guardar Cambios
+                        </button>
+                        <a href="{{ path('app_servers') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const osSelect = document.getElementById('server_os');
+    const versionSelect = document.getElementById('server_os_version');
+    const versionText = document.getElementById('osVersionText');
+    
+    osSelect.addEventListener('change', function() {
+        const osId = this.value;
+        
+        if (!osId) {
+            versionSelect.innerHTML = '<option value="">Seleccione un SO primero</option>';
+            versionSelect.disabled = true;
+            return;
+        }
+        
+        versionSelect.disabled = true;
+        versionSelect.innerHTML = '<option value="">Cargando versiones...</option>';
+        
+        fetch('/api/operating-systems/' + osId + '/versions')
+            .then(response => response.json())
+            .then(versions => {
+                versionSelect.innerHTML = '<option value="">Seleccionar versión</option>';
+                
+                if (versions.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No hay versiones disponibles';
+                    versionSelect.appendChild(option);
+                    versionSelect.disabled = false;
+                } else {
+                    versions.forEach(function(v) {
+                        const option = document.createElement('option');
+                        option.value = v.version;
+                        option.textContent = v.version;
+                        versionSelect.appendChild(option);
+                    });
+                    versionSelect.disabled = false;
+                }
+            })
+            .catch(function(error) {
+                versionSelect.innerHTML = '<option value="">Error al cargar versiones</option>';
+                versionSelect.disabled = false;
+            });
+    });
+    
+    versionSelect.addEventListener('change', function() {
+        if (this.value) {
+            versionText.style.display = 'none';
+        } else {
+            versionText.style.display = 'block';
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

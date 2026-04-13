@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Sistema Operativo{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Editar: {{ operatingSystem.name }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" class="row g-3">
+                    <div class="col-12">
+                        <label for="name" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ operatingSystem.name }}" required>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="color" class="form-label">Color</label>
+                        <select class="form-select" id="color" name="color">
+                            <option value="info" {% if operatingSystem.color == 'info' %}selected{% endif %}>Azul (info)</option>
+                            <option value="primary" {% if operatingSystem.color == 'primary' %}selected{% endif %}>Azul (primary)</option>
+                            <option value="success" {% if operatingSystem.color == 'success' %}selected{% endif %}>Verde (success)</option>
+                            <option value="warning" {% if operatingSystem.color == 'warning' %}selected{% endif %}>Amarillo (warning)</option>
+                            <option value="danger" {% if operatingSystem.color == 'danger' %}selected{% endif %}>Rojo (danger)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Guardar Cambios
+                        </button>
+                        <a href="{{ path('app_admin_os') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="bi bi-code-square me-2"></i>Versiones del Sistema Operativo
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ path('app_admin_os_version_add', {id: operatingSystem.id}) }}" class="row g-3 mb-3">
+                    <input type="hidden" name="_token" value="{{ csrf_token('add_version_' ~ operatingSystem.id) }}">
+                    <div class="col-8">
+                        <input type="text" class="form-control" name="version" placeholder="Nueva versión (ej: 22.04)" required>
+                    </div>
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-plus-lg me-1"></i>Agregar
+                        </button>
+                    </div>
+                </form>
+
+                <hr>
+
+                {% if versions|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Versión</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for version in versions %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-{{ version.color }}">{{ version.version }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <form method="post" action="{{ path('app_admin_os_version_delete', {id: version.id}) }}" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_version_' ~ version.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar versión {{ version.version }}?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-3 mb-0">
+                        No hay versiones registradas.<br>
+                        Agrega la primera usando el formulario de arriba.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

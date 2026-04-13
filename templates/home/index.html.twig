@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center py-5">
+            <i class="bi bi-server" style="font-size: 4rem; color: #0d6efd;"></i>
+            <h1 class="mt-4 mb-3">Gestión de Servidores</h1>
+            <p class="lead text-muted mb-4">Sistema de gestión y monitoreo de servidores</p>
+            
+            {% if app.user %}
+                <div class="alert alert-success" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Sesión iniciada como <strong>{{ app.user.userIdentifier }}</strong>
+                </div>
+                <a href="{{ path('app_dashboard') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-speedometer2 me-2"></i>Ir al Panel
+                </a>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,197 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: 'Login API'
+            description: 'API REST para gestión de servidores, tags y sistemas operativos'
+            version: '1.0.0'
+        components:
+            securitySchemes:
+                bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+                    description: 'JWT Token. Click "Authorize" button to enter your token'
+        security:
+            - bearer: []
+        paths:
+            /api/login:
+                post:
+                    summary: 'Iniciar sesión y obtener token JWT'
+                    tags: [Authentication]
+                    operationId: login
+                    consumes:
+                        - application/json
+                    produces:
+                        - application/json
+                    parameters:
+                        - name: email
+                          in: query
+                          required: true
+                          type: string
+                          description: 'Email del usuario'
+                        - name: password
+                          in: query
+                          required: true
+                          type: string
+                          description: 'Contraseña del usuario'
+                    responses:
+                        '200':
+                            description: 'Login exitoso - retorna token JWT'
+                            schema:
+                                type: object
+                                properties:
+                                    token:
+                                        type: string
+                                        description: 'Token JWT para autenticación'
+                        '401':
+                            description: 'Credenciales inválidas'
+            /api/servers:
+                get:
+                    summary: 'Listar todos los servidores'
+                    tags: [Servers]
+                    responses:
+                        '200':
+                            description: 'Lista de servidores'
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/definitions/Server'
+                post:
+                    summary: 'Crear un servidor'
+                    tags: [Servers]
+                    responses:
+                        '201':
+                            description: 'Servidor creado'
+            /api/servers/{id}:
+                get:
+                    summary: 'Obtener un servidor'
+                    tags: [Servers]
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '200':
+                            description: 'Servidor encontrado'
+                            schema:
+                                $ref: '#/definitions/Server'
+                        '404':
+                            description: 'Servidor no encontrado'
+                put:
+                    summary: 'Actualizar un servidor'
+                    tags: [Servers]
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '200':
+                            description: 'Servidor actualizado'
+                        '404':
+                            description: 'Servidor no encontrado'
+                delete:
+                    summary: 'Eliminar un servidor'
+                    tags: [Servers]
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '204':
+                            description: 'Servidor eliminado'
+            /api/tags:
+                get:
+                    summary: 'Listar todos los tags'
+                    tags: [Tags]
+                    responses:
+                        '200':
+                            description: 'Lista de tags'
+            /api/operating-systems/{id}/versions:
+                get:
+                    summary: 'Listar versiones de un sistema operativo'
+                    tags: [Operating Systems]
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '200':
+                            description: 'Lista de versiones del SO'
+            /api/operating-systems/versions/{id}:
+                put:
+                    summary: 'Actualizar una versión de SO'
+                    tags: [Operating Systems]
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '200':
+                            description: 'Versión actualizada'
+                delete:
+                    summary: 'Eliminar una versión de SO'
+                    tags: [Operating Systems]
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '204':
+                            description: 'Versión eliminada'
+            /api/operating-systems:
+                get:
+                    summary: 'Listar todos los sistemas operativos'
+                    tags: [Operating Systems]
+                    responses:
+                        '200':
+                            description: 'Lista de sistemas operativos'
+        definitions:
+            LoginRequest:
+                type: object
+                required:
+                    - email
+                    - password
+                properties:
+                    email:
+                        type: string
+                    password:
+                        type: string
+            Server:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                    name:
+                        type: string
+                    os:
+                        type: string
+                    osVersion:
+                        type: string
+                    managementIp:
+                        type: string
+                    sshUser:
+                        type: string
+                    cpu:
+                        type: string
+                    ram:
+                        type: string
+                    hd:
+                        type: string
+                    provider:
+                        type: string
+                    site:
+                        type: string
+                    description:
+                        type: string
+                    status:
+                        type: string
+    areas:
+        default:
+            path_patterns:
+                - ^/api/

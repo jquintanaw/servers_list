@@ -1,0 +1,9 @@
+lexik_jwt_authentication:
+    secret_key: /var/www/config/jwt/private.pem
+    public_key: /var/www/config/jwt/public.pem
+    pass_phrase: test123
+    token_ttl: 3600
+    token_extractors:
+        authorization_header:
+            enabled: true
+            prefix: Bearer

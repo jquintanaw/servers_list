@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Tag{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">
+                    <i class="bi bi-tag me-2"></i>Editar: {{ tag.name }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post" class="row g-3">
+                    <div class="col-12">
+                        <label for="name" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ tag.name }}" required>
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="color" class="form-label">Color</label>
+                        <select class="form-select" id="color" name="color">
+                            <option value="primary" {% if tag.color == 'primary' %}selected{% endif %}>Azul (primary)</option>
+                            <option value="secondary" {% if tag.color == 'secondary' %}selected{% endif %}>Gris (secondary)</option>
+                            <option value="success" {% if tag.color == 'success' %}selected{% endif %}>Verde (success)</option>
+                            <option value="danger" {% if tag.color == 'danger' %}selected{% endif %}>Rojo (danger)</option>
+                            <option value="warning" {% if tag.color == 'warning' %}selected{% endif %}>Amarillo (warning)</option>
+                            <option value="info" {% if tag.color == 'info' %}selected{% endif %}>Cyan (info)</option>
+                            <option value="light" {% if tag.color == 'light' %}selected{% endif %}>Claro (light)</option>
+                            <option value="dark" {% if tag.color == 'dark' %}selected{% endif %}>Oscuro (dark)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>Guardar Cambios
+                        </button>
+                        <a href="{{ path('app_admin_tags') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg me-1"></i>Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

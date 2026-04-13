@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sistemas Operativos{% endblock %}
+
+{% block body %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2 class="h4 mb-3">
+            <i class="bi bi-linux me-2"></i>Sistemas Operativos
+        </h2>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ path('app_admin_os_new') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Sistema
+        </a>
+    </div>
+</div>
+
+{% if app.flashes('success')|length > 0 or app.flashes('error')|length > 0 %}
+    {% for flash in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>{{ flash }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+    {% for flash in app.flashes('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ flash }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px;"></th>
+                    <th>Nombre</th>
+                    <th>Color</th>
+                    <th>Versiones</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for os in operatingSystems %}
+                <tr class="os-row" data-os-id="{{ os.id }}">
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary toggle-versions" type="button" data-bs-toggle="collapse" data-bs-target="#versions-{{ os.id }}">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </td>
+                    <td class="fw-semibold">{{ os.name }}</td>
+                    <td>
+                        <span class="badge bg-{{ os.color }}">{{ os.color }}</span>
+                    </td>
+                    <td>
+                        {% if os.versions|length > 0 %}
+                            <span class="badge bg-info">{{ os.versions|length }}</span>
+                        {% else %}
+                            <span class="text-muted">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{{ path('app_admin_os_edit', {id: os.id}) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="post" action="{{ path('app_admin_os_delete', {id: os.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_os_' ~ os.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar {{ os.name }}?')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5" class="p-0 border-0">
+                        <div class="collapse collapse-versions" id="versions-{{ os.id }}">
+                            <div class="card border-0 bg-light m-3">
+                                <div class="card-body py-2">
+                                    <h6 class="mb-2"><i class="bi bi-code-square me-1"></i>Versiones:</h6>
+                                    {% if os.versions|length > 0 %}
+                                        {% for version in os.versions %}
+                                            <span class="badge bg-{{ version.color }} me-1 mb-1" style="font-size: 0.9rem; padding: 0.5rem;">
+                                                {{ version.version }}
+                                                <form method="post" action="{{ path('app_admin_os_version_delete', {id: version.id}) }}" class="d-inline ms-1">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_version_' ~ version.id) }}">
+                                                    <button type="submit" class="btn btn-sm p-0 text-white" onclick="return confirm('¿Eliminar versión {{ version.version }}?')">
+                                                        <i class="bi bi-x"></i>
+                                                    </button>
+                                                </form>
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">No hay versiones. <a href="{{ path('app_admin_os_edit', {id: os.id}) }}">Agregar versiones</a></span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-muted">
+                        No hay sistemas operativos registrados.
+                        <br><a href="{{ path('app_admin_os_new') }}">Crear el primero</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.toggle-versions').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var icon = this.querySelector('i');
+            if (this.getAttribute('aria-expanded') === 'true') {
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            } else {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

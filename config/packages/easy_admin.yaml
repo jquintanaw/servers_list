@@ -1,0 +1,125 @@
+easy_admin:
+    site_name: 'Panel de Administración'
+    design:
+        menu:
+            - label: 'Gestión'
+              icon: 'gear'
+              children:
+                  - { entity: User, label: 'Usuarios', icon: 'user' }
+                  - { entity: Server, label: 'Servidores', icon: 'server' }
+                  - { entity: ServerTag, label: 'Tags', icon: 'tags' }
+                  - { entity: OperatingSystem, label: 'Sistemas Operativos', icon: 'desktop' }
+                  - { entity: OperatingSystemVersion, label: 'Versiones de SO', icon: 'file' }
+                  - { entity: Service, label: 'Servicios', icon: 'globe' }
+    entities:
+        User:
+            class: App\Entity\User
+            label: 'Usuarios'
+            list:
+                fields:
+                    - id
+                    - email
+                    - { property: 'status', type: 'choice', choices: { enabled: enabled, disabled: disabled, maintenance: maintenance } }
+                    - { property: 'roles', type: 'array' }
+            form:
+                fields:
+                    - email
+                    - { property: 'password', type: 'password', options: { required: false, mapped: false } }
+                    - { property: 'status', type: 'choice', choices: { enabled: enabled, disabled: disabled, maintenance: maintenance } }
+                    - { property: 'roles', type: 'choice', choices: { ROLE_USER: usuario, ROLE_SERVICE_ADMIN: 'servicio admin', ROLE_ADMIN: administrador, ROLE_API_GET: 'API Lectura', ROLE_API_POST: 'API Crear', ROLE_API_PUT: 'API Actualizar', ROLE_API_DELETE: 'API Eliminar' }, multiple: true, expanded: true }
+            actions:
+                - { name: 'edit', label: 'Editar' }
+                - { name: 'delete', label: 'Eliminar' }
+            permission: ROLE_ADMIN
+
+        Server:
+            class: App\Entity\Server
+            label: 'Servidores'
+            list:
+                fields:
+                    - id
+                    - name
+                    - os
+                    - osVersion
+                    - operatingSystemVersion
+                    - managementIp
+                    - { property: 'status', type: 'choice' }
+            form:
+                fields:
+                    - name
+                    - os
+                    - osVersion
+                    - { property: 'operatingSystemVersion', type: 'entity', options: { class: App\Entity\OperatingSystemVersion } }
+                    - managementIp
+                    - sshUser
+                    - sshPassword
+                    - cpu
+                    - ram
+                    - hd
+                    - provider
+                    - site
+                    - description
+                    - status
+                    - { property: 'services', type: 'entity', options: { class: App\Entity\Service, multiple: true } }
+                    - { property: 'groups', type: 'entity', options: { class: App\Entity\ServerGroup, multiple: true } }
+                    - { property: 'tags', type: 'entity', options: { class: App\Entity\ServerTag, multiple: true } }
+            permission: ROLE_ADMIN
+
+        ServerTag:
+            class: App\Entity\ServerTag
+            label: 'Tags'
+            list:
+                fields:
+                    - id
+                    - name
+                    - color
+                    - createdAt
+            form:
+                fields:
+                    - name
+                    - color
+            permission: ROLE_ADMIN
+
+        OperatingSystem:
+            class: App\Entity\OperatingSystem
+            label: 'Sistemas Operativos'
+            list:
+                fields:
+                    - id
+                    - name
+                    - color
+                    - createdAt
+            form:
+                fields:
+                    - name
+                    - color
+            permission: ROLE_ADMIN
+
+        Service:
+            class: App\Entity\Service
+            label: 'Servicios'
+            list:
+                fields:
+                    - id
+                    - name
+            form:
+                fields:
+                    - name
+            permission: ROLE_ADMIN
+
+        OperatingSystemVersion:
+            class: App\Entity\OperatingSystemVersion
+            label: 'Versiones de SO'
+            list:
+                fields:
+                    - id
+                    - version
+                    - operatingSystem
+                    - color
+                    - createdAt
+            form:
+                fields:
+                    - { property: 'operatingSystem', type: 'entity', options: { class: App\Entity\OperatingSystem } }
+                    - version
+                    - color
+            permission: ROLE_ADMIN

@@ -1,0 +1,217 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mi Perfil{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0 text-white" data-bs-theme="dark"><i class="bi bi-person-circle me-2"></i>Mi Perfil</h4>
+            </div>
+            <div class="card-body">
+                {{ form_start(form, {'attr': {'id': 'profile-form'}}) }}
+                
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5 class="border-bottom pb-2 text-dark-mode">Avatar</h5>
+                    </div>
+                    <div class="col-md-12 text-center mb-3">
+                        {% if user.avatarFilename %}
+                            <div class="position-relative d-inline-block" onmouseover="this.querySelector('.avatar-overlay').style.display='flex'" onmouseout="this.querySelector('.avatar-overlay').style.display='none'">
+                                <img src="{{ asset(user.avatarPath) }}" alt="Avatar" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;" onclick="document.getElementById('avatar_file').click()">
+                                <div class="avatar-overlay position-absolute top-0 start-0 w-100 h-100 rounded-circle d-none align-items-center justify-content-center" style="background: rgba(0,0,0,0.5); cursor: pointer;" onclick="document.getElementById('avatar_file').click()">
+                                    <i class="bi bi-pencil text-white" style="font-size: 1.5rem;"></i>
+                                </div>
+                            </div>
+                            <br>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAvatar()">
+                                <i class="bi bi-trash me-1"></i>Eliminar avatar
+                            </button>
+                        {% else %}
+                            <div class="position-relative d-inline-block" onmouseover="this.querySelector('.avatar-overlay').style.display='flex'" onmouseout="this.querySelector('.avatar-overlay').style.display='none'">
+                                <div class="bg-secondary bg-opacity-25 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px; cursor: pointer;" onclick="document.getElementById('avatar_file').click()">
+                                    <i class="bi bi-person-fill text-secondary" style="font-size: 3rem;"></i>
+                                </div>
+                                <div class="avatar-overlay position-absolute top-0 start-0 w-100 h-100 rounded-circle d-none align-items-center justify-content-center" style="background: rgba(0,0,0,0.5); cursor: pointer;" onclick="document.getElementById('avatar_file').click()">
+                                    <i class="bi bi-pencil text-white" style="font-size: 1.5rem;"></i>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <input type="file" name="avatar_file" id="avatar_file" class="d-none" accept="image/jpeg,image/png,image/gif,image/webp">
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5 class="border-bottom pb-2 text-dark-mode">Información Personal</h5>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            {{ form_label(form.fullName, 'Nombre completo', {'label_attr': {'class': 'form-label text-dark-mode'}}) }}
+                            {{ form_widget(form.fullName, {'attr': {'class': 'form-control text-dark-mode-input'}}) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5 class="border-bottom pb-2 text-dark-mode">Dirección</h5>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            {{ form_label(form.address, 'Dirección', {'label_attr': {'class': 'form-label text-dark-mode'}}) }}
+                            {{ form_widget(form.address, {'attr': {'class': 'form-control text-dark-mode-input'}}) }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form_label(form.city, 'Ciudad', {'label_attr': {'class': 'form-label text-dark-mode'}}) }}
+                            {{ form_widget(form.city, {'attr': {'class': 'form-control text-dark-mode-input'}}) }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form_label(form.country, 'País', {'label_attr': {'class': 'form-label text-dark-mode'}}) }}
+                            {{ form_widget(form.country, {'attr': {'class': 'form-control text-dark-mode-input'}}) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <h5 class="border-bottom pb-2 text-dark-mode">Redes Sociales</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-dark-mode">Twitter/X</label>
+                            <div class="input-group">
+                                <span class="input-group-text text-dark-mode">@</span>
+                                <input type="text" name="socialNetworks[twitter]" class="form-control text-dark-mode-input" value="{{ socialNetworks.twitter|default('') }}" placeholder="usuario">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-dark-mode">GitHub</label>
+                            <input type="text" name="socialNetworks[github]" class="form-control text-dark-mode-input" value="{{ socialNetworks.github|default('') }}" placeholder="usuario">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-dark-mode">LinkedIn</label>
+                            <input type="text" name="socialNetworks[linkedin]" class="form-control text-dark-mode-input" value="{{ socialNetworks.linkedin|default('') }}" placeholder="usuario">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label text-dark-mode">Sitio Web</label>
+                            <input type="url" name="socialNetworks[website]" class="form-control text-dark-mode-input" value="{{ socialNetworks.website|default('') }}" placeholder="https://">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ path('app_servers') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>Guardar cambios
+                    </button>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteAvatar() {
+    if (confirm('¿Estás seguro de que deseas eliminar tu avatar?')) {
+        fetch('{{ path('api_profile_avatar_delete') }}', {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.error || 'Error al eliminar avatar');
+            }
+        })
+        .catch(error => {
+            alert('Error al eliminar avatar');
+        });
+    }
+}
+
+document.getElementById('profile-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        fullName: formData.get('profile[fullName]'),
+        address: formData.get('profile[address]'),
+        city: formData.get('profile[city]'),
+        country: formData.get('profile[country]'),
+        socialNetworks: {
+            twitter: formData.get('socialNetworks[twitter]'),
+            github: formData.get('socialNetworks[github]'),
+            linkedin: formData.get('socialNetworks[linkedin]'),
+            website: formData.get('socialNetworks[website]')
+        }
+    };
+
+    fetch('{{ path('api_profile_put') }}', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.errors) {
+            alert('Errores: ' + Object.values(data.errors).join(', '));
+        } else {
+            uploadAvatar();
+        }
+    })
+    .catch(error => {
+        alert('Error al guardar perfil');
+    });
+});
+
+function uploadAvatar() {
+    const fileInput = document.getElementById('avatar_file');
+    if (fileInput && fileInput.files.length > 0) {
+        const formData = new FormData();
+        formData.append('avatar', fileInput.files[0]);
+
+        fetch('{{ path('api_profile_avatar_post') }}', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            location.reload();
+        });
+    } else {
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

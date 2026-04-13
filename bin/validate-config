@@ -1,0 +1,28 @@
+#!/bin/sh
+# Run all configuration validation tests
+
+echo "====================================="
+echo "Running Configuration Tests"
+echo "====================================="
+
+echo "\n1. Docker Compose Configuration..."
+php login/tests/Integration/DockerComposeTest.php
+RESULT1=$?
+
+echo "\n2. Doctrine Configuration..."
+php login/tests/Integration/DoctrineConfigTest.php
+RESULT2=$?
+
+echo "\n3. Nginx and Dockerfile Configuration..."
+php login/tests/Integration/NginxConfigTest.php
+RESULT3=$?
+
+echo "\n====================================="
+
+if [ $RESULT1 -eq 0 ] && [ $RESULT2 -eq 0 ] && [ $RESULT3 -eq 0 ]; then
+    echo "✅ All tests PASSED!"
+    exit 0
+else
+    echo "❌ Some tests FAILED!"
+    exit 1
+fi

@@ -1,0 +1,309 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Servidores{% endblock %}
+
+{% block body %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2 class="h4 mb-3">
+            <i class="bi bi-server me-2"></i>Servidores
+        </h2>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ path('app_servers_export', app.request.query.all) }}" class="btn btn-outline-secondary me-2">
+            <i class="bi bi-download me-1"></i>CSV
+        </a>
+        {% if is_granted('ROLE_SERVICE_ADMIN') %}
+            <a href="{{ path('app_servers_new') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Nuevo Servidor
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if app.flashes('success')|length > 0 or app.flashes('info')|length > 0 %}
+    {% for flash in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>{{ flash }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+    {% for flash in app.flashes('info') %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>{{ flash }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-2">
+                <label for="filter-name" class="form-label small text-muted">Nombre</label>
+                <input type="text" class="form-control" id="filter-name" name="name" value="{{ filters.name }}" placeholder="Buscar...">
+            </div>
+            <div class="col-md-2">
+                <label for="filter-os" class="form-label small text-muted">Sistema</label>
+                <select class="form-select" id="filter-os" name="os">
+                    <option value="">Todos</option>
+                    {% for os in osOptions %}
+                        <option value="{{ os.osName }}" {% if filters.os == os.osName %}selected{% endif %}>{{ os.osName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="filter-group" class="form-label small text-muted">Grupo</label>
+                <select class="form-select" id="filter-group" name="group">
+                    <option value="">Todos los grupos</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="filter-tag" class="form-label small text-muted">Tag</label>
+                <select class="form-select" id="filter-tag" name="tag">
+                    <option value="">Todos los tags</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="filter-description" class="form-label small text-muted">Descripción</label>
+                <input type="text" class="form-control" id="filter-description" name="description" value="{{ filters.description }}">
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-funnel me-1"></i>Filtrar
+                </button>
+                <a href="{{ path('app_servers') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle me-1"></i>Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0" id="servers-table">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px;"></th>
+                    <th>Nombre</th>
+                    <th>SO</th>
+                    <th>Versión</th>
+                    <th>IP Gestión</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for server in servers %}
+                <tr class="server-row" data-server-id="{{ server.id }}">
+                    <td>
+                        <button class="btn btn-sm btn-outline-secondary toggle-details" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ server.id }}">
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                    </td>
+                    <td class="fw-semibold">{{ server.name }}</td>
+                    <td>{% if server.operatingSystemVersion and server.operatingSystemVersion.operatingSystem %}{{ server.operatingSystemVersion.operatingSystem.name }}{% else %}{{ server.os }}{% endif %}</td>
+                    <td>{% if server.operatingSystemVersion %}{{ server.operatingSystemVersion.version }}{% else %}{{ server.osVersion }}{% endif %}</td>
+                    <td><code class="small">{{ server.managementIp }}</code></td>
+                    <td>
+                        {% if server.status == 'enabled' or server.status == 'active' %}
+                            <span class="badge bg-success">Activo</span>
+                        {% elseif server.status == 'disabled' %}
+                            <span class="badge bg-danger">Inactivo</span>
+                        {% elseif server.status == 'maintenance' %}
+                            <span class="badge bg-warning text-dark">Mantenimiento</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ server.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        {% if is_granted('ROLE_SERVICE_ADMIN') %}
+                            <a href="{{ path('app_servers_edit', {id: server.id}) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" action="{{ path('app_servers_restart', {id: server.id}) }}" class="d-inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('restart' ~ server.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-info" title="Reiniciar" onclick="event.preventDefault(); confirmAction('¿Reiniciar {{ server.name }}?', this.form)">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                            </form>
+                        {% endif %}
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar" data-bs-toggle="modal" data-bs-target="#deleteModal" data-server-name="{{ server.name }}" data-server-id="{{ server.id }}" data-csrf-token="{{ csrf_token('delete' ~ server.id) }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="7" class="p-0 border-0">
+                        <div class="collapse collapse-details" id="details-{{ server.id }}" data-bs-theme="{{ app.request.cookies.get('theme', 'light') }}">
+                            <div class="card border-0 theme-card m-3">
+                                <div class="card-body py-2">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Usuario SSH</small>
+                                            <strong>{{ server.sshUser }}</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Password</small>
+                                            <span class="font-monospace">
+                                                {% if is_granted('ROLE_ADMIN') %}{{ server.sshPassword }}{% else %}••••••••{% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted d-block">CPU</small>
+                                            <strong>{{ server.cpu }}</strong>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted d-block">RAM</small>
+                                            <strong>{{ server.ram }}</strong>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted d-block">Disco</small>
+                                            <strong>{{ server.hd }}</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Provider</small>
+                                            <strong>{{ server.provider }}</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Ubicación</small>
+                                            <strong>{{ server.site }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Descripción</small>
+                                            <strong>{{ server.description }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Servicios</small>
+                                            <div>
+                                                {% for service in server.services %}
+                                                    <span class="badge bg-outline-primary border">{{ service.name }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">Sin servicios</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox d-block mb-2" style="font-size: 2rem;"></i>
+                        No hay servidores registrados.
+                        {% if is_granted('ROLE_SERVICE_ADMIN') %}
+                            <br><a href="{{ path('app_servers_new') }}">Crear el primero</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% set queryParams = app.request.query.all %}
+{% if pagination.totalPages > 1 %}
+<div class="d-flex justify-content-between align-items-center mt-3">
+    <div class="d-flex align-items-center">
+        <label class="me-2">Mostrar:</label>
+        <select class="form-select form-select-sm" style="width: auto;" onchange="window.location.href='{{ path('app_servers') }}?limit='+this.value+'&page=1'">
+            <option value="10" {% if pagination.limit == 10 %}selected{% endif %}>10</option>
+            <option value="20" {% if pagination.limit == 20 %}selected{% endif %}>20</option>
+            <option value="50" {% if pagination.limit == 50 %}selected{% endif %}>50</option>
+        </select>
+        <span class="ms-3">Total: {{ pagination.totalServers }}</span>
+    </div>
+    <nav>
+        <ul class="pagination mb-0">
+            <li class="page-item {% if pagination.page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ path('app_servers',queryParams|merge({limit: pagination.limit, page: 1})) }}">&laquo;</a>
+            </li>
+            <li class="page-item {% if pagination.page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ path('app_servers',queryParams|merge({limit: pagination.limit, page: pagination.page - 1})) }}">&lsaquo;</a>
+            </li>
+            {% for i in max(1, pagination.page - 2)..min(pagination.totalPages, pagination.page + 2) %}
+                <li class="page-item {% if i == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{{ path('app_servers',queryParams|merge({limit: pagination.limit, page: i})) }}">{{ i }}</a>
+                </li>
+            {% endfor %}
+            <li class="page-item {% if pagination.page >= pagination.totalPages %}disabled{% endif %}">
+                <a class="page-link" href="{{ path('app_servers',queryParams|merge({limit: pagination.limit, page: pagination.page + 1})) }}">&rsaquo;</a>
+            </li>
+            <li class="page-item {% if pagination.page >= pagination.totalPages %}disabled{% endif %}">
+                <a class="page-link" href="{{ path('app_servers',queryParams|merge({limit: pagination.limit, page: pagination.totalPages})) }}">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de eliminar el servidor <strong id="deleteServerName"></strong>?</p>
+                <p class="text-muted small">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" id="deleteForm" action="">
+                    <input type="hidden" name="_token" id="deleteToken">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.toggle-details').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            const target = document.querySelector(this.getAttribute('data-bs-target'));
+            if (target.classList.contains('show')) {
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            } else {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            }
+        });
+    });
+
+    document.querySelectorAll('.collapse-details').forEach(function(collapseEl) {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        collapseEl.setAttribute('data-bs-theme', currentTheme);
+    });
+
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const serverName = button.getAttribute('data-server-name');
+        const serverId = button.getAttribute('data-server-id');
+        const csrfToken = button.getAttribute('data-csrf-token');
+        
+        document.getElementById('deleteServerName').textContent = serverName;
+        document.getElementById('deleteForm').action = '/servers/' + serverId + '/delete';
+        document.getElementById('deleteToken').value = csrfToken;
+    });
+});
+
+function confirmAction(message, form) {
+    if (confirm(message)) {
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
