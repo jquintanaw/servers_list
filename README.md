@@ -1,6 +1,6 @@
-# LoginWeb
+# GestorServidores
 
-A Symfony-based web application for server management with user authentication and admin interface.
+A Symfony-based web application for multitenant server management that allows clients to manage their contracted resources include web and API access.
 
 ## Description
 
