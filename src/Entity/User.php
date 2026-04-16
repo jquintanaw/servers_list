@@ -59,6 +59,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $avatarFilename = null;
 
+    #[ORM\ManyToOne(targetEntity: Tenant::class)]
+    #[ORM\JoinColumn(name: 'tenant_id', nullable: true)]
+    private ?Tenant $tenant = null;
+
     public const AVATAR_UPLOAD_DIR = 'var/uploads/avatars';
 
     public function getId(): ?int
@@ -237,5 +241,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
             $this->avatarFilename = null;
         }
+    }
+
+    public function getTenant(): ?Tenant
+    {
+        return $this->tenant;
+    }
+
+    public function setTenant(?Tenant $tenant): static
+    {
+        $this->tenant = $tenant;
+        return $this;
     }
 }

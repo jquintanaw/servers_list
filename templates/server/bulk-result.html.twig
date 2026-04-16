@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Resultado Carga Masiva{% endblock %}
+
+{% block body %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h2 class="h4">
+            <i class="bi bi-check-circle me-2"></i>Resultado de Carga Masiva
+        </h2>
+    </div>
+    <div class="col-md-6 text-md-end">
+        <a href="{{ path('app_servers') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left me-1"></i>Ver Lista
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if errors|length > 0 %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Se encontraron errores al procesar el archivo:
+            <ul class="mt-2 mb-0">
+            {% for error in errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% if count > 0 and errors|length == 0 %}
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            Se han cargado <strong>{{ count }}</strong> servidores correctamente.
+        </div>
+        {% endif %}
+
+        <div class="table-responsive mt-3">
+            <table class="table table-hover mb-0" id="servers-table">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 40px;"></th>
+                        <th>Nombre</th>
+                        <th>SO</th>
+                        <th>Versión</th>
+                        <th>IP Gestión</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for server in servers %}
+                    <tr class="server-row">
+                        <td>
+                            <button class="btn btn-sm btn-outline-secondary toggle-details" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ loop.index }}">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </td>
+                        <td class="fw-semibold">{{ server.name }}</td>
+                        <td>{{ server.os }}</td>
+                        <td>{{ server.osVersion }}</td>
+                        <td><code class="small">{{ server.managementIp }}</code></td>
+                        <td>
+                            {% if server.status == 'enabled' or server.status == 'active' %}
+                                <span class="badge bg-success">Activo</span>
+                            {% elseif server.status == 'disabled' %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% elseif server.status == 'maintenance' %}
+                                <span class="badge bg-warning text-dark">Mantenimiento</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ server.status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" class="p-0 border-0">
+                            <div class="collapse" id="details-{{ loop.index }}">
+                                <div class="card border-0 m-3">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Usuario SSH</small>
+                                            <strong>{{ server.sshUser }}</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Password</small>
+                                            <span class="font-monospace">••••••••</span>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted d-block">CPU</small>
+                                            <strong>{{ server.cpu }}</strong>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted d-block">RAM</small>
+                                            <strong>{{ server.ram }}</strong>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <small class="text-muted d-block">Disco</small>
+                                            <strong>{{ server.hd }}</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Provider</small>
+                                            <strong>{{ server.provider }}</strong>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted d-block">Ubicación</small>
+                                            <strong>{{ server.site }}</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Descripción</small>
+                                            <strong>{{ server.description }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.toggle-details').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            const target = document.querySelector(this.getAttribute('data-bs-target'));
+            if (target.classList.contains('show')) {
+                icon.classList.remove('bi-chevron-up');
+                icon.classList.add('bi-chevron-down');
+            } else {
+                icon.classList.remove('bi-chevron-down');
+                icon.classList.add('bi-chevron-up');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

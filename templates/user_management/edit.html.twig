@@ -32,6 +32,19 @@
             </div>
 
             <div class="mb-3">
+                <label for="tenant" class="form-label">Cliente (Tenant)</label>
+                <select class="form-select" id="tenant" name="tenant">
+                    <option value="">Sin asignar</option>
+                    {% if tenants is defined %}
+                        {% for t in tenants %}
+                            <option value="{{ t.id }}" {{ user.tenant and user.tenant.id == t.id ? 'selected' : '' }}>{{ t.name }}</option>
+                        {% endfor %}
+                    {% endif %}
+                </select>
+                <small class="text-muted">Asignar usuario a un cliente</small>
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label">Roles</label>
                 <div class="border rounded p-3">
                     <div class="form-check">
@@ -43,6 +56,10 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="role_service_admin" name="roles[]" value="ROLE_SERVICE_ADMIN" {{ 'ROLE_SERVICE_ADMIN' in user.roles ? 'checked' : '' }}>
                         <label class="form-check-label" for="role_service_admin">ROLE_SERVICE_ADMIN</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="role_tenant_admin" name="roles[]" value="ROLE_TENANT_ADMIN" {{ 'ROLE_TENANT_ADMIN' in user.roles ? 'checked' : '' }}>
+                        <label class="form-check-label" for="role_tenant_admin">ROLE_TENANT_ADMIN (Gestión de Clientes)</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="role_admin" name="roles[]" value="ROLE_ADMIN" {{ 'ROLE_ADMIN' in user.roles ? 'checked' : '' }}>
@@ -134,15 +151,27 @@ document.getElementById('user-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     const formData = new FormData(this);
+    
+    // Get roles manually since disabled checkboxes are not included in FormData
+    const roles = [];
+    document.querySelectorAll('input[name="roles[]"]:checked').forEach(cb => {
+        roles.push(cb.value);
+    });
+    // Always include ROLE_USER
+    if (!roles.includes('ROLE_USER')) {
+        roles.push('ROLE_USER');
+    }
+    
     const data = {
         email: formData.get('email'),
         password: formData.get('password'),
         status: formData.get('status'),
-        roles: formData.getAll('roles'),
+        roles: roles,
         fullName: formData.get('fullName'),
         address: formData.get('address'),
         city: formData.get('city'),
         country: formData.get('country'),
+        tenant: formData.get('tenant'),
         socialNetworks: {
             twitter: formData.get('socialNetworks[twitter]'),
             github: formData.get('socialNetworks[github]'),
@@ -159,18 +188,22 @@ document.getElementById('user-form').addEventListener('submit', function(e) {
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
         if (data.error) {
             alert(data.error);
         } else if (data.errors) {
             alert('Errores: ' + Object.values(data.errors).join(', '));
         } else {
-            window.location.href = '{{ path('app_users') }}';
+            window.location.reload();
         }
     })
     .catch(error => {
-        alert('Error al guardar usuario');
+        console.error('Error:', error);
+        alert('Error al guardar usuario: ' + error.message);
     });
 });
 </script>

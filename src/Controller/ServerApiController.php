@@ -27,9 +27,65 @@ class ServerApiController extends AbstractController
     #[IsGranted('ROLE_API_GET')]
     public function listServers(): JsonResponse
     {
-        $servers = $this->entityManager->getRepository(Server::class)->findAll();
+        $currentUser = $this->getUser();
+        $isGlobalAdmin = $currentUser && in_array('ROLE_ADMIN', $currentUser->getRoles(), true);
+        
+        $qb = $this->entityManager->getRepository(Server::class)->createQueryBuilder('s');
+        
+        if (!$isGlobalAdmin && $currentUser && $currentUser->getTenant()) {
+            $qb->leftJoin('s.tenant', 't')
+               ->andWhere('t.id = :tenantId')
+               ->setParameter('tenantId', $currentUser->getTenant()->getId());
+        }
+        
+        $servers = $qb->getQuery()->getResult();
 
         return new JsonResponse(array_map(fn (Server $server) => $this->serializeServer($server), $servers));
+    }
+    
+    #[Route('/api/tenants/me', name: 'api_tenant_current', methods: ['GET'])]
+    #[IsGranted('ROLE_API_GET')]
+    public function getCurrentTenant(): JsonResponse
+    {
+        $currentUser = $this->getUser();
+        
+        if (!$currentUser || !$currentUser->getTenant()) {
+            return new JsonResponse(['error' => 'No tenant assigned'], 404);
+        }
+        
+        $tenant = $currentUser->getTenant();
+        
+        return new JsonResponse([
+            'id' => $tenant->getId(),
+            'name' => $tenant->getName(),
+            'address' => $tenant->getAddress(),
+            'contractType' => $tenant->getContractType()?->getName(),
+        ]);
+    }
+    
+    #[Route('/api/tenants/{id}', name: 'api_tenant_get', methods: ['GET'])]
+    #[IsGranted('ROLE_API_GET')]
+    public function getTenant(int $id): JsonResponse
+    {
+        $currentUser = $this->getUser();
+        $isGlobalAdmin = $currentUser && in_array('ROLE_ADMIN', $currentUser->getRoles(), true);
+        
+        if (!$isGlobalAdmin) {
+            return new JsonResponse(['error' => 'Access denied'], 403);
+        }
+        
+        $tenant = $this->entityManager->getRepository(\App\Entity\Tenant::class)->find($id);
+        
+        if (!$tenant) {
+            return new JsonResponse(['error' => 'Tenant not found'], 404);
+        }
+        
+        return new JsonResponse([
+            'id' => $tenant->getId(),
+            'name' => $tenant->getName(),
+            'address' => $tenant->getAddress(),
+            'contractType' => $tenant->getContractType()?->getName(),
+        ]);
     }
 
     #[Route('/api/servers', name: 'api_servers_create', methods: ['POST'])]
@@ -193,5 +249,23 @@ class ServerApiController extends AbstractController
                 'color' => $tag->getColor(),
             ])->toArray(),
         ];
+    }
+
+    #[Route('/api/servers/bulk/template', name: 'api_servers_bulk_template', methods: ['GET'])]
+    #[IsGranted('ROLE_API_ADMIN')]
+    public function bulkTemplate(): Response
+    {
+        $headers = ['name', 'os', 'osVersion', 'managementIp', 'sshUser', 'sshPassword', 'cpu', 'ram', 'hd', 'provider', 'site', 'description', 'status'];
+        $example = [
+            'server-001', 'Ubuntu', '22.04', '192.168.1.100', 'admin', 'password123', '4', '8GB', '500GB', 'AWS', 'us-east-1', 'Production server', 'active'
+        ];
+
+        $content = implode(',', $headers) . "\n" . implode(',', $example);
+
+        $response = new Response($content);
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="servers_template.csv"');
+
+        return $response;
     }
 }

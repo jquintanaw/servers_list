@@ -28,6 +28,21 @@
                     </div>
                     
                     <div class="col-md-6">
+                        <label for="tenant" class="form-label">Cliente</label>
+                        {% if server.tenant %}
+                            <input type="text" class="form-control" value="{{ server.tenant.name }}" disabled>
+                            <small class="text-muted">No modificable una vez asignado</small>
+                        {% else %}
+                            <select class="form-select" id="tenant" name="tenant">
+                                <option value="">Seleccionar...</option>
+                                {% for tenant in tenants %}
+                                    <option value="{{ tenant.id }}">{{ tenant.name }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
                         <label for="os" class="form-label">Sistema Operativo *</label>
                         <select class="form-select" id="server_os" name="os" required>
                             <option value="">Seleccionar...</option>

@@ -48,6 +48,8 @@ security:
         - { path: ^/mi-perfil, roles: ROLE_USER }
         - { path: ^/mi-perfil/datos, roles: ROLE_USER }
         - { path: ^/mi-perfil/avatar, roles: ROLE_USER }
+        - { path: ^/admin/statistics, roles: ROLE_USER }
+        - { path: ^/admin/services, roles: ROLE_SERVICE_ADMIN }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/api/servers, roles: PUBLIC_ACCESS }
         - { path: ^/api/tags, roles: PUBLIC_ACCESS }

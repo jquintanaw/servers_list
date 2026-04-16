@@ -36,6 +36,20 @@ html[data-theme="dark"] .stat-card.bg-warning .text-white {
             <i class="bi bi-bar-chart me-2"></i>Estadísticas de Servidores
         </h2>
     </div>
+    {% if isGlobalAdmin and tenants|length > 0 %}
+    <div class="col-md-6 text-md-end">
+        <form method="get" class="row g-3 d-inline-flex">
+            <div class="col-auto">
+                <select class="form-select form-select-sm" name="tenant" onchange="this.form.submit()">
+                    <option value="">Todos los clientes</option>
+                    {% for tenant in tenants %}
+                        <option value="{{ tenant.id }}" {% if selectedTenant == tenant.id %}selected{% endif %}>{{ tenant.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+    {% endif %}
 </div>
 
 {# Summary Cards #}

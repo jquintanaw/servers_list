@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Tenant;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,6 +38,7 @@ class UserManagementController extends AbstractController
     public function new(Request $request): Response
     {
         $user = new User();
+        $tenants = $this->entityManager->getRepository(Tenant::class)->findBy([], ['name' => 'ASC']);
 
         if ($request->isMethod('POST')) {
             $contentType = $request->headers->get('Content-Type', '');
@@ -51,6 +53,7 @@ class UserManagementController extends AbstractController
                 $city = $data['city'] ?? null;
                 $country = $data['country'] ?? null;
                 $socialNetworks = $data['socialNetworks'] ?? null;
+                $tenantId = $data['tenant'] ?? null;
             } else {
                 $email = $request->request->get('email', '');
                 $password = $request->request->get('password', '');
@@ -60,6 +63,7 @@ class UserManagementController extends AbstractController
                 $city = $request->request->get('city');
                 $country = $request->request->get('country');
                 $socialNetworks = $request->request->get('socialNetworks');
+                $tenantId = $request->request->get('tenant');
             }
 
             $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
@@ -68,13 +72,22 @@ class UserManagementController extends AbstractController
                     return $this->json(['error' => 'El email ya está en uso.'], 400);
                 }
                 $this->addFlash('error', 'El email ya está en uso.');
-                return $this->render('user_management/new.html.twig', ['user' => $user]);
+                return $this->render('user_management/new.html.twig', [
+                    'user' => $user,
+                    'tenants' => $tenants,
+                ]);
             }
 
             $user->setEmail($email);
             $user->setPassword($this->passwordHasher->hashPassword($user, $password));
             $user->setStatus($status);
             $user->setRoles(['ROLE_USER']);
+
+            if ($tenantId) {
+                $tenant = $this->entityManager->getRepository(Tenant::class)->find((int)$tenantId);
+                $user->setTenant($tenant);
+            }
+
             $user->setFullName($fullName);
             $user->setAddress($address);
             $user->setCity($city);
@@ -93,16 +106,19 @@ class UserManagementController extends AbstractController
             return $this->redirectToRoute('app_users');
         }
 
-        return $this->render('user_management/new.html.twig', ['user' => $user]);
+        return $this->render('user_management/new.html.twig', [
+            'user' => $user,
+            'tenants' => $tenants,
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'app_users_edit', methods: ['GET', 'POST'])]
     public function edit(User $user, Request $request): Response
     {
         if ($request->isMethod('POST')) {
-            $contentType = $request->headers->get('Content-Type', '');
+            $isJson = $request->headers->get('X-Requested-With') === 'XMLHttpRequest';
             
-            if (str_contains($contentType, 'application/json')) {
+            if ($isJson) {
                 $data = json_decode($request->getContent(), true);
                 $email = $data['email'] ?? '';
                 $status = $data['status'] ?? 'enabled';
@@ -113,6 +129,7 @@ class UserManagementController extends AbstractController
                 $city = $data['city'] ?? null;
                 $country = $data['country'] ?? null;
                 $socialNetworks = $data['socialNetworks'] ?? null;
+                $tenantId = $data['tenant'] ?? null;
             } else {
                 $email = $request->request->get('email', '');
                 $status = $request->request->get('status', 'enabled');
@@ -123,6 +140,7 @@ class UserManagementController extends AbstractController
                 $city = $request->request->get('city');
                 $country = $request->request->get('country');
                 $socialNetworks = $request->request->get('socialNetworks');
+                $tenantId = $request->request->get('tenant');
             }
 
             $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
@@ -131,7 +149,10 @@ class UserManagementController extends AbstractController
                     return $this->json(['error' => 'El email ya está en uso.'], 400);
                 }
                 $this->addFlash('error', 'El email ya está en uso.');
-                return $this->render('user_management/edit.html.twig', ['user' => $user]);
+                return $this->render('user_management/edit.html.twig', [
+                    'user' => $user,
+                    'tenants' => $this->entityManager->getRepository(Tenant::class)->findBy([], ['name' => 'ASC']),
+                ]);
             }
 
             if (!in_array('ROLE_USER', $roles, true)) {
@@ -147,12 +168,23 @@ class UserManagementController extends AbstractController
 
             if ($removingOwnAdmin) {
                 $this->addFlash('error', 'No puede remover su propio rol de administrador.');
-                return $this->render('user_management/edit.html.twig', ['user' => $user]);
+                return $this->render('user_management/edit.html.twig', [
+                    'user' => $user,
+                    'tenants' => $this->entityManager->getRepository(Tenant::class)->findBy([], ['name' => 'ASC']),
+                ]);
             }
 
             $user->setEmail($email);
             $user->setStatus($status);
             $user->setRoles($roles);
+            
+            if ($tenantId) {
+                $tenant = $this->entityManager->getRepository(Tenant::class)->find((int)$tenantId);
+                $user->setTenant($tenant);
+            } else {
+                $user->setTenant(null);
+            }
+            
             $user->setFullName($fullName);
             $user->setAddress($address);
             $user->setCity($city);
@@ -163,18 +195,26 @@ class UserManagementController extends AbstractController
                 $user->setPassword($this->passwordHasher->hashPassword($user, $password));
             }
 
-            $this->entityManager->flush();
+            try {
+                $this->entityManager->flush();
+            } catch (\Exception $e) {
+                error_log('Flush error: ' . $e->getMessage());
+                throw $e;
+            }
 
             if ($request->headers->get('X-Requested-With') === 'XMLHttpRequest') {
-                return $this->json(['success' => true]);
+                return $this->json(['success' => true, 'reload' => true]);
             }
 
             $this->addFlash('success', 'Usuario actualizado correctamente.');
-
+ 
             return $this->redirectToRoute('app_users');
         }
 
-        return $this->render('user_management/edit.html.twig', ['user' => $user]);
+        return $this->render('user_management/edit.html.twig', [
+            'user' => $user,
+            'tenants' => $this->entityManager->getRepository(Tenant::class)->findBy([], ['name' => 'ASC']),
+        ]);
     }
 
     #[Route('/{id}/delete', name: 'app_users_delete', methods: ['POST'])]

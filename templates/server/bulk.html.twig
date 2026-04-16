@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Carga Masiva de Servidores{% endblock %}
+
+{% block body %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="h4">
+            <i class="bi bi-upload me-2"></i>Carga Masiva de Servidores
+        </h2>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p class="text-muted mb-4">
+            Descarga la plantilla, complétala con los datos de los servidores y súbela al sistema.
+        </p>
+        
+        <div class="mb-4">
+            <a href="{{ path('app_servers_bulk_template') }}" class="btn btn-outline-primary">
+                <i class="bi bi-download me-1"></i>Descargar Plantilla CSV
+            </a>
+        </div>
+
+        <hr>
+
+        <form method="post" action="{{ path('app_servers_bulk_upload') }}" enctype="multipart/form-data" class="mt-4">
+            <div class="mb-3">
+                <label for="csvFile" class="form-label">Archivo CSV</label>
+                <input type="file" class="form-control" id="csvFile" name="csvFile" accept=".csv" required>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-upload me-1"></i>Subir Archivo
+            </button>
+            <a href="{{ path('app_servers') }}" class="btn btn-outline-secondary ms-2">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

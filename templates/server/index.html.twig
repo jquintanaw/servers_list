@@ -14,6 +14,9 @@
             <i class="bi bi-download me-1"></i>CSV
         </a>
         {% if is_granted('ROLE_SERVICE_ADMIN') %}
+            <a href="{{ path('app_servers_bulk') }}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-upload me-1"></i>Carga Masiva
+            </a>
             <a href="{{ path('app_servers_new') }}" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>Nuevo Servidor
             </a>
@@ -53,17 +56,34 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label for="filter-group" class="form-label small text-muted">Grupo</label>
-                <select class="form-select" id="filter-group" name="group">
-                    <option value="">Todos los grupos</option>
+                <label for="filter-os-version" class="form-label small text-muted">Versión</label>
+                <select class="form-select" id="filter-os-version" name="osVersion">
+                    <option value="">Todas las versiones</option>
+                    {% for v in osVersionOptions %}
+                        <option value="{{ v.osVersion }}" data-os="{{ v.osName }}" {% if filters.osVersion == v.osVersion %}selected{% endif %}>{{ v.osVersion }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="col-md-2">
                 <label for="filter-tag" class="form-label small text-muted">Tag</label>
                 <select class="form-select" id="filter-tag" name="tag">
                     <option value="">Todos los tags</option>
+                    {% for tag in tagOptions %}
+                        <option value="{{ tag.name }}" {% if filters.tag == tag.name %}selected{% endif %}>{{ tag.name }}</option>
+                    {% endfor %}
                 </select>
             </div>
+            {% if tenantOptions is defined and tenantOptions|length > 0 %}
+            <div class="col-md-2">
+                <label for="filter-tenant" class="form-label small text-muted">Cliente</label>
+                <select class="form-select" id="filter-tenant" name="tenant">
+                    <option value="">Todos los clientes</option>
+                    {% for tenant in tenantOptions %}
+                        <option value="{{ tenant.id }}" {% if filters.tenant == tenant.id %}selected{% endif %}>{{ tenant.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
             <div class="col-md-2">
                 <label for="filter-description" class="form-label small text-muted">Descripción</label>
                 <input type="text" class="form-control" id="filter-description" name="description" value="{{ filters.description }}">
@@ -89,6 +109,7 @@
                     <th>Nombre</th>
                     <th>SO</th>
                     <th>Versión</th>
+                    {% if showTenant is defined and showTenant %}<th>Cliente</th>{% endif %}
                     <th>IP Gestión</th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
@@ -105,6 +126,7 @@
                     <td class="fw-semibold">{{ server.name }}</td>
                     <td>{% if server.operatingSystemVersion and server.operatingSystemVersion.operatingSystem %}{{ server.operatingSystemVersion.operatingSystem.name }}{% else %}{{ server.os }}{% endif %}</td>
                     <td>{% if server.operatingSystemVersion %}{{ server.operatingSystemVersion.version }}{% else %}{{ server.osVersion }}{% endif %}</td>
+                    {% if showTenant is defined and showTenant %}<td>{% if server.tenant %}{{ server.tenant.name }}{% else %}<span class="text-muted">-</span>{% endif %}</td>{% endif %}
                     <td><code class="small">{{ server.managementIp }}</code></td>
                     <td>
                         {% if server.status == 'enabled' or server.status == 'active' %}
@@ -137,7 +159,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="7" class="p-0 border-0">
+                    <td colspan="{{ showTenant is defined and showTenant ? 8 : 7 }}" class="p-0 border-0">
                         <div class="collapse collapse-details" id="details-{{ server.id }}" data-bs-theme="{{ app.request.cookies.get('theme', 'light') }}">
                             <div class="card border-0 theme-card m-3">
                                 <div class="card-body py-2">
@@ -194,7 +216,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
+                    <td colspan="{{ showTenant is defined and showTenant ? 8 : 7 }}" class="text-center py-4 text-muted">
                         <i class="bi bi-inbox d-block mb-2" style="font-size: 2rem;"></i>
                         No hay servidores registrados.
                         {% if is_granted('ROLE_SERVICE_ADMIN') %}
@@ -298,6 +320,34 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('deleteForm').action = '/servers/' + serverId + '/delete';
         document.getElementById('deleteToken').value = csrfToken;
     });
+
+    const osSelect = document.getElementById('filter-os');
+    const versionSelect = document.getElementById('filter-os-version');
+    const versionOptions = versionSelect.querySelectorAll('option');
+    const allVersions = Array.from(versionOptions).filter(opt => opt.value !== '');
+
+    function filterVersions() {
+        const selectedOs = osSelect.value;
+        allVersions.forEach(function(opt) {
+            const optOs = opt.getAttribute('data-os');
+            if (selectedOs === '' || optOs === selectedOs) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+        
+        if (selectedOs !== '') {
+            const currentVersion = versionSelect.value;
+            const selectedOption = versionSelect.querySelector('option[value="' + currentVersion + '"]');
+            if (currentVersion && selectedOption && selectedOption.style.display === 'none') {
+                versionSelect.value = '';
+            }
+        }
+    }
+
+    osSelect.addEventListener('change', filterVersions);
+    filterVersions();
 });
 
 function confirmAction(message, form) {

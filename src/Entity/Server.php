@@ -76,6 +76,10 @@ class Server
     #[ORM\JoinTable(name: 'server_server_tag')]
     private Collection $tags;
 
+    #[ORM\ManyToOne(targetEntity: Tenant::class)]
+    #[ORM\JoinColumn(name: 'tenant_id', nullable: true)]
+    private ?Tenant $tenant = null;
+
     public function __construct()
     {
         $this->services = new ArrayCollection();
@@ -319,6 +323,17 @@ class Server
     {
         $this->tags->removeElement($tag);
 
+        return $this;
+    }
+
+    public function getTenant(): ?Tenant
+    {
+        return $this->tenant;
+    }
+
+    public function setTenant(?Tenant $tenant): static
+    {
+        $this->tenant = $tenant;
         return $this;
     }
 }

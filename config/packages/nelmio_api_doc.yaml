@@ -45,6 +45,37 @@ nelmio_api_doc:
                                         description: 'Token JWT para autenticación'
                         '401':
                             description: 'Credenciales inválidas'
+            /api/tenants/me:
+                get:
+                    summary: 'Obtener información del tenant actual'
+                    tags: [Tenants]
+                    operationId: getCurrentTenant
+                    produces:
+                        - application/json
+                    responses:
+                        '200':
+                            description: 'Información del tenant'
+                        '404':
+                            description: 'Sin tenant asignado'
+            /api/tenants/{id}:
+                get:
+                    summary: 'Obtener información de un tenant (solo admin)'
+                    tags: [Tenants]
+                    operationId: getTenant
+                    produces:
+                        - application/json
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '200':
+                            description: 'Información del tenant'
+                        '403':
+                            description: 'Acceso denegado'
+                        '404':
+                            description: 'Tenant no encontrado'
             /api/servers:
                 get:
                     summary: 'Listar todos los servidores'
@@ -191,6 +222,37 @@ nelmio_api_doc:
                         type: string
                     status:
                         type: string
+            /api/tenants/me:
+                get:
+                    summary: 'Obtener información del tenant actual'
+                    tags: [Tenants]
+                    operationId: getCurrentTenant
+                    produces:
+                        - application/json
+                    responses:
+                        '200':
+                            description: 'Información del tenant'
+                        '404':
+                            description: 'Sin tenant asignado'
+            /api/tenants/{id}:
+                get:
+                    summary: 'Obtener información de un tenant (solo admin)'
+                    tags: [Tenants]
+                    operationId: getTenant
+                    produces:
+                        - application/json
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          type: integer
+                    responses:
+                        '200':
+                            description: 'Información del tenant'
+                        '403':
+                            description: 'Acceso denegado'
+                        '404':
+                            description: 'Tenant no encontrado'
     areas:
         default:
             path_patterns:

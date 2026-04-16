@@ -21,10 +21,7 @@
   justify-content: center;
   font-family: var(--font-sans, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
   color: var(--login-text);
-  background:
-    radial-gradient(1200px 600px at 80% -20%, rgba(37, 99, 235, 0.12), transparent 55%),
-    radial-gradient(900px 500px at -10% 100%, rgba(99, 102, 241, 0.1), transparent 50%),
-    var(--color-bg, #f1f5f9);
+  background: #64748b;
 }
 
 .login-page *,
@@ -178,10 +175,7 @@
     --login-text: #f1f5f9;
     --login-muted: #94a3b8;
     --login-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-    background:
-      radial-gradient(1200px 600px at 80% -20%, rgba(59, 130, 246, 0.15), transparent 55%),
-      radial-gradient(900px 500px at -10% 100%, rgba(99, 102, 241, 0.12), transparent 50%),
-      var(--color-bg, #0f172a);
+    background: #475569;
   }
 
   .login-page input[type="email"],

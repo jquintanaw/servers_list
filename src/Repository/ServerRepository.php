@@ -23,15 +23,24 @@ class ServerRepository extends ServiceEntityRepository
         ?string $name = null,
         ?string $os = null,
         ?string $osVersion = null,
+        ?string $tag = null,
         ?string $description = null,
         ?int $limit = null,
-        ?int $offset = null
+        ?int $offset = null,
+        ?int $tenantId = null
     ): QueryBuilder {
         $qb = $this->createQueryBuilder('s')
             ->leftJoin('s.operatingSystemVersion', 'osv')
             ->addSelect('osv')
             ->leftJoin('osv.operatingSystem', 'os')
-            ->addSelect('os');
+            ->addSelect('os')
+            ->leftJoin('s.tenant', 't')
+            ->addSelect('t');
+
+        if ($tenantId !== null) {
+            $qb->andWhere('t.id = :tenantId')
+               ->setParameter('tenantId', $tenantId);
+        }
 
         if ($name !== null && $name !== '') {
             $qb->andWhere('LOWER(s.name) LIKE LOWER(:name)')
@@ -46,6 +55,12 @@ class ServerRepository extends ServiceEntityRepository
         if ($osVersion !== null && $osVersion !== '') {
             $qb->andWhere('osv.version = :osVersion')
                ->setParameter('osVersion', $osVersion);
+        }
+
+        if ($tag !== null && $tag !== '') {
+            $qb->leftJoin('s.tags', 'st')
+               ->andWhere('st.name = :tag')
+               ->setParameter('tag', $tag);
         }
 
         if ($description !== null && $description !== '') {
@@ -69,10 +84,20 @@ class ServerRepository extends ServiceEntityRepository
         ?string $name = null,
         ?string $os = null,
         ?string $osVersion = null,
-        ?string $description = null
+        ?string $tag = null,
+        ?string $description = null,
+        ?int $tenantId = null
     ): int {
         $qb = $this->createQueryBuilder('s')
-            ->select('COUNT(s.id)');
+            ->select('COUNT(s.id)')
+            ->leftJoin('s.operatingSystemVersion', 'osv')
+            ->leftJoin('osv.operatingSystem', 'os')
+            ->leftJoin('s.tenant', 't');
+
+        if ($tenantId !== null) {
+            $qb->andWhere('t.id = :tenantId')
+               ->setParameter('tenantId', $tenantId);
+        }
 
         if ($name !== null && $name !== '') {
             $qb->andWhere('LOWER(s.name) LIKE LOWER(:name)')
@@ -80,16 +105,19 @@ class ServerRepository extends ServiceEntityRepository
         }
 
         if ($os !== null && $os !== '') {
-            $qb->leftJoin('s.operatingSystemVersion', 'osv')
-              ->leftJoin('osv.operatingSystem', 'os')
-              ->andWhere('os.name = :os')
+            $qb->andWhere('os.name = :os')
                ->setParameter('os', $os);
         }
 
         if ($osVersion !== null && $osVersion !== '') {
-            $qb->leftJoin('s.operatingSystemVersion', 'osv')
-              ->andWhere('osv.version = :osVersion')
+            $qb->andWhere('osv.version = :osVersion')
                ->setParameter('osVersion', $osVersion);
+        }
+
+        if ($tag !== null && $tag !== '') {
+            $qb->leftJoin('s.tags', 'tg')
+               ->andWhere('tg.name = :tag')
+               ->setParameter('tag', $tag);
         }
 
         if ($description !== null && $description !== '') {
@@ -111,6 +139,9 @@ class ServerRepository extends ServiceEntityRepository
     {
         $allVersions = $this->getEntityManager()->getRepository(\App\Entity\OperatingSystemVersion::class)->findAll();
         
-        return array_map(fn($v) => ['osVersion' => $v->getVersion()], $allVersions);
+        return array_map(fn($v) => [
+            'osVersion' => $v->getVersion(),
+            'osName' => $v->getOperatingSystem()?->getName() ?? ''
+        ], $allVersions);
     }
 }

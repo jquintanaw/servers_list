@@ -33,6 +33,7 @@ class ServerController extends AbstractController
         $name = $request->query->get('name');
         $os = $request->query->get('os');
         $osVersion = $request->query->get('osVersion');
+        $tag = $request->query->get('tag');
         $description = $request->query->get('description');
         $limit = (int) $request->query->get('limit', 10);
         $page = (int) $request->query->get('page', 1);
@@ -41,12 +42,28 @@ class ServerController extends AbstractController
         $page = max(1, $page);
         $offset = ($page - 1) * $limit;
 
-        $totalServers = $this->serverRepository->countWithFilters($name, $os, $osVersion, $description);
+        $user = $this->getUser();
+        $tenantId = null;
+        $isGlobalAdmin = $user && in_array('ROLE_ADMIN', $user->getRoles(), true);
+        
+        if ($isGlobalAdmin && $request->query->get('tenant')) {
+            $tenantId = (int) $request->query->get('tenant');
+        } elseif (!$isGlobalAdmin && $user && $user->getTenant()) {
+            $tenantId = $user->getTenant()->getId();
+        }
+
+        $totalServers = $this->serverRepository->countWithFilters($name, $os, $osVersion, $tag, $description, $tenantId);
         $totalPages = ceil($totalServers / $limit);
 
-        $servers = $this->serverRepository->findWithFilters($name, $os, $osVersion, $description, $limit, $offset);
+        $servers = $this->serverRepository->findWithFilters($name, $os, $osVersion, $tag, $description, $limit, $offset, $tenantId);
         $distinctOs = $this->serverRepository->findDistinctOs();
         $distinctOsVersions = $this->serverRepository->findDistinctOsVersions();
+        $tagOptions = $this->entityManager->getRepository(\App\Entity\ServerTag::class)->findBy([], ['name' => 'ASC']);
+        
+        $tenantOptions = [];
+        if ($isGlobalAdmin) {
+            $tenantOptions = $this->entityManager->getRepository(\App\Entity\Tenant::class)->findBy([], ['name' => 'ASC']);
+        }
 
         return $this->render('server/index.html.twig', [
             'servers' => $servers->getQuery()->getResult(),
@@ -54,16 +71,21 @@ class ServerController extends AbstractController
                 'name' => $name,
                 'os' => $os,
                 'osVersion' => $osVersion,
+                'tag' => $tag,
+                'tenant' => $tenantId,
                 'description' => $description,
             ],
             'osOptions' => $distinctOs,
             'osVersionOptions' => $distinctOsVersions,
+            'tagOptions' => $tagOptions,
+            'tenantOptions' => $tenantOptions,
             'pagination' => [
                 'limit' => $limit,
                 'page' => $page,
                 'totalPages' => $totalPages,
                 'totalServers' => $totalServers,
             ],
+            'showTenant' => $isGlobalAdmin,
         ]);
     }
 
@@ -95,6 +117,7 @@ class ServerController extends AbstractController
             'services' => $this->entityManager->getRepository(\App\Entity\Service::class)->findAll(),
             'operatingSystems' => $this->entityManager->getRepository(\App\Entity\OperatingSystem::class)->findBy([], ['name' => 'ASC']),
             'tags' => $this->entityManager->getRepository(\App\Entity\ServerTag::class)->findBy([], ['name' => 'ASC']),
+            'tenants' => $this->entityManager->getRepository(\App\Entity\Tenant::class)->findBy([], ['name' => 'ASC']),
         ]);
     }
 
@@ -126,6 +149,7 @@ class ServerController extends AbstractController
             'operatingSystems' => $this->entityManager->getRepository(\App\Entity\OperatingSystem::class)->findBy([], ['name' => 'ASC']),
             'osVersions' => $this->entityManager->getRepository(OperatingSystemVersion::class)->findAll(),
             'tags' => $this->entityManager->getRepository(\App\Entity\ServerTag::class)->findBy([], ['name' => 'ASC']),
+            'tenants' => $this->entityManager->getRepository(\App\Entity\Tenant::class)->findBy([], ['name' => 'ASC']),
         ]);
     }
 
@@ -183,11 +207,20 @@ class ServerController extends AbstractController
         $name = $request->query->get('name');
         $os = $request->query->get('os');
         $osVersion = $request->query->get('osVersion');
+        $tag = $request->query->get('tag');
         $description = $request->query->get('description');
 
-        $servers = $this->serverRepository->findWithFilters($name, $os, $osVersion, $description)->getQuery()->getResult();
+        $user = $this->getUser();
+        $tenantId = null;
+        $isGlobalAdmin = $this->isGranted('ROLE_ADMIN');
+        
+        if (!$isGlobalAdmin && $user && $user->getTenant()) {
+            $tenantId = $user->getTenant()->getId();
+        }
 
-        $csv = "Nombre,Sistema,Version,IP Gestion,Estado,CPU,RAM,HD,Proveedor,Ubicacion,Usuario SSH,Servicios,Tags,Descripcion\n";
+        $servers = $this->serverRepository->findWithFilters($name, $os, $osVersion, $tag, $description, null, null, $tenantId)->getQuery()->getResult();
+
+        $csv = "Nombre,Sistema,Version,Cliente,IP Gestion,Estado,CPU,RAM,HD,Proveedor,Ubicacion,Usuario SSH,Servicios,Tags,Descripcion\n";
         
         foreach ($servers as $server) {
             $services = implode(';', $server->getServices()->map(fn($s) => $s->getName())->toArray());
@@ -196,11 +229,14 @@ class ServerController extends AbstractController
             $osName = $server->getOperatingSystemVersion()?->getOperatingSystem()?->getName() ?? $server->getOs();
             $osVersion = $server->getOperatingSystemVersion()?->getVersion() ?? $server->getOsVersion();
             
+            $tenantName = $server->getTenant()?->getName() ?? '';
+            
             $csv .= sprintf(
-                "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
+                "\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"\n",
                 $this->escapeCsv($server->getName()),
                 $this->escapeCsv($osName),
                 $this->escapeCsv($osVersion),
+                $this->escapeCsv($tenantName),
                 $this->escapeCsv($server->getManagementIp()),
                 $this->escapeCsv($server->getStatus()),
                 $this->escapeCsv($server->getCpu()),
@@ -231,6 +267,14 @@ class ServerController extends AbstractController
     {
         $server->setName($request->request->get('name', ''));
         $server->setManagementIp($request->request->get('managementIp', ''));
+        
+        $tenantId = $request->request->get('tenant');
+        if ($tenantId) {
+            $tenant = $this->entityManager->getRepository(\App\Entity\Tenant::class)->find((int)$tenantId);
+            if ($tenant) {
+                $server->setTenant($tenant);
+            }
+        }
         $server->setSshUser($request->request->get('sshUser', ''));
         $server->setSshPassword($request->request->get('sshPassword', ''));
         $server->setCpu($request->request->get('cpu', ''));
